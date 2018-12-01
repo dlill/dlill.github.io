@@ -1,7 +1,6 @@
 ---
 title: "Explicit and Implicit Transformations"
 author: "Daniel Kaschek"
-date: "December 18, 2018"
 output: html_document
 ---
 

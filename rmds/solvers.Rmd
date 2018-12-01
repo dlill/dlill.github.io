@@ -1,7 +1,6 @@
 ---
 title: "Using different ODE solves with dMod"
 author: "Daniel Kaschek"
-date: "December 25, 2018"
 output: html_document
 ---
 

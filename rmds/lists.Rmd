@@ -1,7 +1,6 @@
 ---
 title: "List objects in dMod"
 author: "Daniel Kaschek"
-date: "December 21, 2018"
 output: html_document
 ---
 

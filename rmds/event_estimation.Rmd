@@ -1,7 +1,6 @@
 ---
 title: "Event Estimation"
 author: "Daniel Kaschek"
-date: "December 16, 2018"
 output: html_document
 ---
 

@@ -1,7 +1,6 @@
 ---
 title: "The Operators `+` and `*` in dMod"
 author: "Daniel Kaschek"
-date: "December 24, 2018"
 output: html_document
 ---
 

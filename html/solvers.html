@@ -11,7 +11,6 @@
 
 <meta name="author" content="Daniel Kaschek" />
 
-<meta name="date" content="2018-12-25" />
 
 <title>Using different ODE solves with dMod</title>
 
@@ -124,7 +123,6 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Using different ODE solves with dMod</h1>
 <h4 class="author"><em>Daniel Kaschek</em></h4>
-<h4 class="date"><em>December 25, 2018</em></h4>
 
 </div>
 
@@ -153,6 +151,8 @@ events &lt;- eventlist() %&gt;%
 
 # Model
 model &lt;- odemodel(equations, events = events, modelname = &quot;linear_chain&quot;)</code></pre>
+<pre><code>## A shared object with name linear_chain already existed and was overwritten.</code></pre>
+<pre><code>## A shared object with name linear_chain_s already existed and was overwritten.</code></pre>
 <p>From the structure of the model it can be seen that the Jacobian of the ODEs is quite sparse. Therefore, we might simulate the model more efficiently with a sparse ODE solver rather than the standard solver LSODA. We select the solver with the <code>optionsOde</code> argument in <code>Xs()</code>:</p>
 <pre class="r"><code>x.sparse &lt;- Xs(model, optionsOde = list(method = &quot;lsodes&quot;))
 x.standard &lt;- Xs(model, optionsOde = list(method = &quot;lsoda&quot;))</code></pre>
@@ -168,10 +168,10 @@ plot(c(prediction.sparse, prediction.standard))</code></pre>
 <p>Next, let’s see if the simulation time with the sparse solver is really faster than with the standard solver</p>
 <pre class="r"><code>system.time(for (i in 1:100) x.sparse(times, pars, deriv = FALSE))</code></pre>
 <pre><code>##    user  system elapsed 
-##   0.968   1.160   2.147</code></pre>
+##   1.000   1.132   2.148</code></pre>
 <pre class="r"><code>system.time(for (i in 1:100) x.standard(times, pars, deriv = FALSE))</code></pre>
 <pre><code>##    user  system elapsed 
-##   0.164   0.000   0.166</code></pre>
+##   0.152   0.000   0.151</code></pre>
 <p>Here, we chose <code>deriv = FALSE</code> to avoid that the sensitivity equations are solved alongside the ODE because we are only interested in the different performance in solving the ODE.</p>
 <p><strong>Conclusion:</strong> Both solvers are so fast that it does not make a difference!</p>
 <div id="some-remarks" class="section level2">

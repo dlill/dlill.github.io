@@ -1,7 +1,6 @@
 ---
 title: "getSymbols and replaceSymbols"
 author: "Daniel Lill"
-date: "1 December 2018"
 output: html_document
 ---
 

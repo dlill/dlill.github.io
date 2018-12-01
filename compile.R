@@ -5,8 +5,10 @@ rmds <- list.files("rmds/", pattern = "[Rr]md")
 htmls <- list.files("html/", "html$")
 not_yet_rendered <- rmds[!str_detect(rmds, paste0(str_remove_all(htmls, "html"), collapse = "|"))]
 
-to_render <- not_yet_rendered
-to_render <- "getSymbols.Rmd"
+to_render <- rmds
+# to_render <- not_yet_rendered
+# to_render <- "getSymbols.Rmd"
+
 
 walk(to_render, ~try(rmarkdown::render(file.path("rmds", .x), 
                                output_format = "html_document", 

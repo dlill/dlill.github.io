@@ -1,7 +1,6 @@
 ---
 title: "Handling Values Below Limit of Quantification (BLOQ)"
 author: "Daniel Kaschek"
-date: "September 10, 2018"
 output: html_document
 ---
 

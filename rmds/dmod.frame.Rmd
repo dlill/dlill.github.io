@@ -1,7 +1,6 @@
 ---
-title: "Advent Calendar - dMod.frame"
+title: "dMod.frame"
 author: "Daniel Lill"
-date: "23 November 2018"
 output: html_document
 ---
 

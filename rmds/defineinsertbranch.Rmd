@@ -1,7 +1,6 @@
 ---
-title: "Advent calendar - define insert and branch"
+title: "Define, insert and branch"
 author: "Daniel Lill"
-date: "29 November 2018"
 output: html_document
 ---
 
