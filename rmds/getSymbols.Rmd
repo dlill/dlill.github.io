@@ -40,14 +40,20 @@ replaceSymbols("logVmax", "VMAX", eqn)
 
 
 ## Safer than string-replacements
-This approach is safer than string manipulations with regexes. Consider this simply case, where regexes are more error-prone.
+This approach is safer than string manipulations with regexes. Consider this simple case, where regexes are more error-prone.
 ```{r}
 eqn <- c("k + k_1 + k.1")
 replaceSymbols("k", "Santa", eqn)
+```
 
-# fails
+This will fail
+```{r}
 str_replace_all(eqn, "k", "Santa")
-# fails as well
+
+```
+
+This fails as well
+```{r}
 str_replace_all(eqn, "\\bk\\b", "Santa")
 ```
 

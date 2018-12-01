@@ -160,15 +160,15 @@ $(document).ready(function () {
 </div>
 <div id="safer-than-string-replacements" class="section level2">
 <h2>Safer than string-replacements</h2>
-<p>This approach is safer than string manipulations with regexes. Consider this simply case, where regexes are more error-prone.</p>
+<p>This approach is safer than string manipulations with regexes. Consider this simple case, where regexes are more error-prone.</p>
 <pre class="r"><code>eqn &lt;- c(&quot;k + k_1 + k.1&quot;)
 replaceSymbols(&quot;k&quot;, &quot;Santa&quot;, eqn)</code></pre>
 <pre><code>## [1] &quot;Santa+k_1+k.1&quot;</code></pre>
-<pre class="r"><code># fails
-str_replace_all(eqn, &quot;k&quot;, &quot;Santa&quot;)</code></pre>
+<p>This will fail</p>
+<pre class="r"><code>str_replace_all(eqn, &quot;k&quot;, &quot;Santa&quot;)</code></pre>
 <pre><code>## [1] &quot;Santa + Santa_1 + Santa.1&quot;</code></pre>
-<pre class="r"><code># fails as well
-str_replace_all(eqn, &quot;\\bk\\b&quot;, &quot;Santa&quot;)</code></pre>
+<p>This fails as well</p>
+<pre class="r"><code>str_replace_all(eqn, &quot;\\bk\\b&quot;, &quot;Santa&quot;)</code></pre>
 <pre><code>## [1] &quot;Santa + k_1 + Santa.1&quot;</code></pre>
 </div>
 
