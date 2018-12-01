@@ -10,6 +10,10 @@
 
 [getFunctions.html](html/getFunctions.html)
 
+[getSymbols.html](html/getSymbols.html)
+
 [lists.html](html/lists.html)
+
+[solvers.html](html/solvers.html)
 
 
