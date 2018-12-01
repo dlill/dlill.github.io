@@ -2,6 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
-.c
-.o
-.so
+
+*.c
+*.o
+*.so
+*.trial

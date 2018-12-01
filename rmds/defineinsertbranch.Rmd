@@ -1,0 +1,163 @@
+---
+title: "Advent calendar - define insert and branch"
+author: "Daniel Lill"
+date: "29 November 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE, warning=FALSE}
+library(dMod)
+library(dplyr)
+```
+
+# How to set up a coordinate transformation conveniently
+
+dMod provides a set of string manipulating functions which make it easy to simultaneously construct coordinate transformations for many different conditions.
+
+Often, certain parameters of a condition are present in the data itself and it is desirable to insert these parameters into the condition specific transformations. Another case is to individualize parameters by condition to be estimated separately. To this end, the three verbs *define, insert* and *branch* have been introduced as a pipe-friendly manner of introducing different coordinate specific trafos.
+
+We will look at a classic christmas problem the problem of *Santa delivering presents*. The question is if he will make it in time?
+
+## The model of Santa delivering presents
+```{r}
+reactions <- NULL %>% 
+  addReaction("presents_on_sleigh", "presents_delivered", "v * presents_on_sleigh") %>% 
+  addReaction("v", "", "v * air_resistance") %>% 
+  addReaction("", "v", "deerpower / (presents_on_sleigh + weight0)")
+reactions %>% as.eqnvec()
+```
+
+```{r}
+x <- reactions %>% as.eqnvec() %>% odemodel %>% Xs
+```
+
+# The different conditions Santa can choose
+There are several options he can choose: 
+Have Rudolph in front of the sleigh, having some presents delivered by amazon or simply delivering fewer presents.
+To define the several conditions, we define a data.frame containing information about the conditions.
+Since the **condition.grid** uses rownames to identify the conditions, we assign automatic names to the conditions via *as.condition.grid*.
+```{r}
+condition.grid <- tribble(
+  ~total_presents,  ~amazon, ~rudolph, ~deerpower,
+  1, F, "normal_deer", 2,
+  2, F, "normal_deer", 2,
+  1, F, "rudolph", 10,
+  2, F, "rudolph", 10,
+  1, T, "normal_deer", 2,
+  2, T, "normal_deer", 2
+)
+condition.grid <- condition.grid %>% as.data.frame() %>%  as.condition.grid()
+print(condition.grid)
+```
+
+The condition.grid now contains several columns with distinct use:
+* *presents_on_sleigh* and *deerpower* contain parameter values in the model's units which can directly be inserted into the trafos
+* *amazon* and *rudolph* contain indicators, if a certain condition is met or not.
+
+## Define new equations via *define*
+Now let's build a trafo from that. First, we **define** parameter transformation equations, which means assigning "outer" parameters y to inner parameters "x".
+```{r}
+trafo <- define(NULL, "x~y", x = getParameters(x), y = getParameters(x))
+trafo
+```
+
+## Replace existing symbols in equations with *insert*
+Let's do one insertion already: we insert the presents which have been delivered by amazon and use **insert** for that, which replaces symbols in existing trafos. For the second insertion, we can make use of the pipe-friendliness of insert
+```{r}
+trafo <- insert(trafo, "presents_on_sleigh~total_presents - amazon_presents") %>% 
+  insert("presents_delivered ~ amazon_presents")
+```
+
+## Make a trafo condition-specific with *branch*
+Next, the trafos are going to be made condition-specific, we **branch** them. 
+Now, we have a list of trafos the names of which are the condition names. Furthermore, the condition.grid is stored as an attribute called "tree", whose variables can now be used in define.
+```{r}
+trafo <- branch(trafo, condition.grid)
+attr(trafo, "tree")
+```
+let's look at this trafo in a table: It's the same everywhere
+```{r}
+prettyprint_trafo <- function(trafo) {
+  eqnnames <- names(trafo[[1]])
+  trafo %>% do.call(c,.) %>% 
+    matrix(nrow = length(eqnnames), dimnames = list(eqnnames, names(trafo))) %>% as.data.frame(stringsAsFactors = F)
+}
+prettyprint_trafo(trafo)
+```
+
+## Use condition.grid to subset conditions for insertions
+Let's first insert the effect that amazon deliveries have. 
+For those conditions when amazon evaluates to F, we want a zero to be inserted for amazon_presents.
+The ...-argument for define can handle boolean expressions based on the condition.grid and uses them to subset the conditions for which the insertions are done.
+```{r}
+trafo <- insert(trafo, "x~0", x = "amazon_presents", amazon ==F)
+prettyprint_trafo(trafo)
+```
+
+## Use condition.grid to insert values from it
+Next, we insert the parameter values which are given directly in the condition.grid.
+The ...-argument can also be used to access values from the condition.grid, in a condition-specific manner.
+```{r}
+trafo <- insert(trafo, "name~value", name = "total_presents", value = total_presents) %>% 
+  insert("name~value", name = "deerpower", value = deerpower)
+prettyprint_trafo(trafo)
+```
+Note that we could have solved this also generically with mget, for this, read ?insert
+
+## Use condition.grid to personalize symbolic parameters for estimation
+We can also assume that the air_resistance of the sleigh is lower when rudolph is at the front, therefore we need new individualized parameters
+```{r}
+trafo <- insert(trafo, "resistance ~ resistance_rudi", resistance = "air_resistance", rudi = rudolph)
+prettyprint_trafo(trafo)
+```
+
+## Use the argument .currentSymbols to access the condition-specific parameters
+We now want to log-transform the parameters, but we would need to supply the newly created parameter names such as "air_resistance_rudolph" and all other parameter names to define(). This is too cumbersome, therefore the .currentSymbols-variable has been introduced to access the current parameters existing in each individual parameter transformation.
+However, we want to exclude "v" from the log-transformation and we can conveniently do so
+```{r}
+trafo <- insert(trafo, "x~exp(x)", x = .currentSymbols[!.currentSymbols %in% "v"])
+prettyprint_trafo(trafo)
+```
+
+
+# Build parameter trafo function
+From this trafo, a parameter transformation function can be readily created, which, if the condition.grid originates from the original data, matches the original conditions exactly.
+```{r}
+p <- P(trafo)
+```
+
+
+# So, will Santa make it in time?
+
+Apparently, Rudolph is indispensable for delivering many presents in time, but Amazon can help if there are not so many presents on the sleigh.
+```{r}
+pars <- c(
+  air_resistance_normal_deer	=	log(8)	, # 1
+  air_resistance_rudolph    	=	log(3)	, # 2
+  amazon_presents           	=	log(.5)	, # 4
+  v                         	=	0	, # 5
+  weight0                   	=	log(0.2)	  # 6 
+)
+plot((x*p)(seq(0,6,0.01), pars))
+```
+
+
+## Remarks on the pipe-friendliness
+The functions are fully pipe-friendly, enabling streamlined construction of symbolic functions. For example, the trafo in this examply could be coded in these few simply lines.
+```{r}
+trafo <- NULL %>% 
+  define( "x~y", x = getParameters(x), y = getParameters(x)) %>% 
+  insert("presents_on_sleigh~total_presents - amazon_presents") %>% 
+  insert("presents_delivered ~ amazon_presents") %>% 
+  branch(condition.grid) %>% 
+  insert("x~0", x = "amazon_presents", amazon == F) %>% 
+  insert("name~value", name = "total_presents", value = total_presents) %>% 
+  insert("name~value", name = "deerpower", value = deerpower) %>% 
+  insert("resistance ~ resistance_rudi", resistance = "air_resistance", rudi = rudolph) %>% 
+  insert("x~exp(x)", x = .currentSymbols[!.currentSymbols %in% "v"])
+prettyprint_trafo(trafo)
+```
