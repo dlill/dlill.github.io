@@ -1,0 +1,63 @@
+---
+title: "getSymbols and replaceSymbols"
+author: "Daniel Lill"
+date: "1 December 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(dMod)
+library(dplyr)
+library(stringr)
+```
+
+If, during day 2 you were wondering about some details of the underlying implementation of *insert*, one question could have been:
+
+> How does insert() know, which parts of a symbolically defined function are parameters?
+
+The answer is: it lets R *parse* the equations to find out.
+
+Suppose, you have a Michaelis-Menten equation with log-transformed parameters.
+```{r}
+eqn <- c("P" = "exp(logVmax) * S / (exp(logKm) + S)")
+```
+
+If the equation is parsed, you will get a table of the parsed data:
+```{r}
+getParseData(parse(text = eqn)) %>% head(10)
+```
+
+## getSymbols and replaceSymbols
+The function *getSymbols* now extracts the text of all elements with *token == "SYMBOL"*
+```{r}
+getSymbols(eqn)
+```
+
+Similarly, *replaceSymbols* replaces the text of these symbols
+```{r}
+replaceSymbols("logVmax", "VMAX", eqn)
+```
+
+
+## Safer than string-replacements
+This approach is safer than string manipulations with regexes. Consider this simply case, where regexes are more error-prone.
+```{r}
+eqn <- c("k + k_1 + k.1")
+replaceSymbols("k", "Santa", eqn)
+
+# fails
+str_replace_all(eqn, "k", "Santa")
+# fails as well
+str_replace_all(eqn, "\\bk\\b", "Santa")
+```
+
+
+
+
+
+
+
+
+
+
+

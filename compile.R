@@ -3,15 +3,18 @@ library(rmarkdown)
 
 rmds <- list.files("rmds/", pattern = "[Rr]md")
 htmls <- list.files("html/", "html$")
-not_yet_rendered <- rmds[!str_detect(rmds, str_remove_all(htmls, "html"))]
+not_yet_rendered <- rmds[!str_detect(rmds, paste0(str_remove_all(htmls, "html"), collapse = "|"))]
 
 to_render <- not_yet_rendered
-to_render <- "defineinsertbranch.Rmd"
+# to_render <- "defineinsertbranch.Rmd"
 
-walk(to_render, ~rmarkdown::render(file.path("rmds", .x), 
+walk(to_render, ~try(rmarkdown::render(file.path("rmds", .x), 
                                output_format = "html_document", 
                                output_file = paste0(str_replace_all(.x, "[Rr]md", "html")), 
-                               output_dir = "html"))
+                               output_dir = "html")))
+
+
+
 
 
 # ------------------------------------------------------------- #
@@ -21,6 +24,12 @@ folders <- list.dirs("rmds/") %>% str_subset("trial")
 unlink(folders, recursive = T)
 
 list.files(pattern = "\\.(c|o|so)$", recursive = T) %>% unlink
+
+# ------------------------------------------------------------- #
+# commiting ----
+# ------------------------------------------------------------- #
+system2("git", c("add", "--all"))
+git2r::commit(message = "updated htmls")
 
 # ------------------------------------------------------------- #
 # index.html ----
@@ -34,7 +43,6 @@ system2("pandoc", c("-o index.html", "index.md"))
 git2r::add(".", "index.html")
 git2r::commit(message = "update index")
 system2("git", "push")
-
 
 htmls2 %>% paste0("[", ., "]", "(html/", ., ")") %>% paste0(collapse = "\n\n") %>% paste0("\n\n") %>% writeLines("Readme.md")
 git2r::add(".", "Readme.md")
