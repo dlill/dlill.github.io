@@ -2,9 +2,7 @@ library(conveniencefunctions)
 library(rmarkdown)
 
 rmds <- list.files("rmds/", pattern = "[Rr]md")
-
 htmls <- list.files("html/", "html$")
-
 not_yet_rendered <- rmds[!str_detect(rmds, str_remove_all(htmls, "html"))]
 
 to_render <- not_yet_rendered
@@ -21,6 +19,8 @@ walk(to_render, ~rmarkdown::render(file.path("rmds", .x),
 # ------------------------------------------------------------- #
 folders <- list.dirs("rmds/") %>% str_subset("trial")
 unlink(folders, recursive = T)
+
+list.files(pattern = "\\.(c|o|so)$", recursive = T) %>% unlink
 
 # ------------------------------------------------------------- #
 # index.html ----
