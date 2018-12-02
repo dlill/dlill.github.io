@@ -1,0 +1,10 @@
+"Description","Rate","B","actB","C","actC","D","actD","Gifts","u"
+"Activation of B","(trigger*u + activateB)*B",-1,1,,,,,,
+"Deactivation of B","deactivateB*actB*(1+deactivateBByD*actD)",1,-1,,,,,,
+"Activation of C","activateC*C*actB",,,-1,1,,,,
+"Deactivation of C","deactivateC*actC",,,1,-1,,,,
+"Activation of D","activateD*D*actC",,,,,-1,1,,
+"Deactivation of D","deactivateD*actD",,,,,1,-1,,
+"Production of Gifts","prodGbyB*actB+prodGbyC*actC+prodGbyD*actD",,,,,,,1,
+"Disappearing Gifts","stealGifts*Gifts",,,,,,,-1,
+"","0",,,,,,,,1
