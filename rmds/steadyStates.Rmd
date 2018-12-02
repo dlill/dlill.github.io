@@ -101,6 +101,11 @@ Santa realizes that this model is not yet realistic. For the time before he trig
 So he tries
 ```{r, echo=TRUE, message=FALSE}
 mysteadies <- steadyStates(reactions)
+```
+```{r, echo=FALSE, message=FALSE, include=FALSE}
+assign("mysteadies", mysteadies, .GlobalEnv)
+```
+```{r}
 trafoSS <- insert(trafo, "x~steadyEqn", x = names(mysteadies), steadyEqn = mysteadies)
 pSS <- P(trafoSS)
 out <- (g*x*pSS)(times, pars)
