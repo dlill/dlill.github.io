@@ -25,6 +25,7 @@ Unfortunately Santa cannot change the feedback mechanisms that seem to be acting
 # Load package dMod
 library(dMod)
 library(ggplot2)
+library(RJSONIO)
 
 # Define reactions
 reactions <- NULL
