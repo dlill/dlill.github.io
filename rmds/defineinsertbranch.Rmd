@@ -17,9 +17,9 @@ library(dplyr)
 
 dMod provides a set of string manipulating functions which make it easy to simultaneously construct coordinate transformations for many different conditions.
 
-Often, certain parameters of a condition are present in the data itself and it is desirable to insert these parameters into the condition specific transformations. Another case is to individualize parameters by condition to be estimated separately. To this end, the three verbs *define, insert* and *branch* have been introduced as a pipe-friendly manner of introducing different coordinate specific trafos.
+Often, certain parameters of a condition are present in the data itself and it is desirable to insert these parameters into the condition specific transformations. Another case is to individualize parameters by condition to be estimated separately. To this end, the three verbs *define, insert* and *branch* have been introduced as a pipe-friendly manner of introducing different condition specific parameter trafos.
 
-We will look at a classic christmas problem the problem of *Santa delivering presents*. The question is if he will make it in time?
+We will look at a classic christmas problem: the problem of *Santa delivering presents*. The question is if he will make it in time, assuming that the christmas night lasts for 6 hours (because the children will be getting up early)?
 
 ## The model of Santa delivering presents
 ```{r}
@@ -34,11 +34,12 @@ reactions %>% as.eqnvec()
 x <- reactions %>% as.eqnvec() %>% odemodel %>% Xs
 ```
 
-# The different conditions Santa can choose
+# Storing the different conditions Santa can choose in a *condition.grid*
 There are several options he can choose: 
 Have Rudolph in front of the sleigh, having some presents delivered by amazon or simply delivering fewer presents.
 To define the several conditions, we define a data.frame containing information about the conditions.
 Since the **condition.grid** uses rownames to identify the conditions, we assign automatic names to the conditions via *as.condition.grid*.
+Of course, the unit of total_presents is metric tons.
 ```{r}
 condition.grid <- tribble(
   ~total_presents,  ~amazon, ~rudolph, ~deerpower,

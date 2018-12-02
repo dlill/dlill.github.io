@@ -1,0 +1,125 @@
+---
+title: "Steady States for Santa"
+author: "Marcus Rosenblatt"
+date: "December 5th, 2018"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Each year Santa is wondering how he will manage to get enough gifts for the children. He sees his elves working all the year very hard. But he has the feeling that gifts are disappearing. Does someone steal them? Over the years he learned that gifts never disappear completely, but it seems that the more there are the more they disappear.
+
+In order to have enough presents on December 24th, Santa is trying to force his elves to start working harder. On December 1st, he tells his oldest elf Bruno (B) that Christmas is coming and the elf suddenly produces faster. Santa knows that when B is working faster also his second oldest elf Chrissie (C) raises his production. And likewise his youngest elf Daniel (D) produces presents depending of the speed of C. However, when D works very hard, the oldest elf B seems to think that he could relax and starts to decrease his production speed again.
+
+When Santa is not triggering again, the whole elf production is going down again to where it has been before December and so does the number of gifts.
+
+Unfortunately Santa cannot change the feedback mechanisms that seem to be acting between his elves. But he wonders whether there is an optimal time point in December to trigger the elves to get the highest number of gifts. Therefore he is trying to model the production of the presents with his favourite modeling environment dMod. He writes down the following model:
+
+
+```{r, echo=TRUE, message=FALSE}
+
+# Load package dMod
+library(dMod)
+library(ggplot2)
+
+# Define reactions
+reactions <- NULL
+reactions <- addReaction(reactions, "B", "actB", rate = "(trigger*u + activateB)*B", description = "Activation of B")
+reactions <- addReaction(reactions, "actB", "B", rate = "deactivateB*actB*(1+deactivateBByD*actD)", description = "Deactivation of B")
+reactions <- addReaction(reactions, "C", "actC", rate = "activateC*C*actB", description = "Activation of C")
+reactions <- addReaction(reactions, "actC", "C", rate = "deactivateC*actC", description = "Deactivation of C")
+reactions <- addReaction(reactions, "D", "actD", rate = "activateD*D*actC", description = "Activation of D")
+reactions <- addReaction(reactions, "actD", "D", rate = "deactivateD*actD", description = "Deactivation of D")
+reactions <- addReaction(reactions, "", "Gifts", rate = "prodGbyB*actB+prodGbyC*actC+prodGbyD*actD", description = "Production of Gifts")
+reactions <- addReaction(reactions, "Gifts", "", rate = "stealGifts*Gifts", description = "Disappearing Gifts")
+
+# In order to use u with events, it has to be defined as a state variable
+reactions <- addReaction(reactions, "", "u", rate = "0", description = "")
+
+# Translate into ODE model
+Elf_model <- odemodel(reactions, modelname = "Elfmodel",
+                      events = rbind(data.frame(var = "u", time = "trigger_begin", value = "1", method = "replace"),
+                                     data.frame(var = "u", time = "trigger_end", value = "0", method = "replace")))
+
+# Define observations
+observables <- eqnvec(
+  G_obs = "scale*Gifts")
+
+# Generate observation function
+g <- Y(observables, f = reactions, compile = TRUE, modelname = "obsfn")
+
+triggertimes <- c(5,10,15,20)
+condition.grid <- data.frame(time = triggertimes)
+rownames(condition.grid) <- paste0("time",triggertimes)
+
+# deinfe parameter transformation
+mypars <- unique(c(getParameters(g), getParameters(Elf_model)))
+trafo <- define(NULL, "x~y", x = mypars, y = mypars)
+trafo <- branch(trafo, condition.grid)
+trafo <- insert(trafo, "x~y", x = "trigger_end", y = "trigger_begin+1")
+trafo <- insert(trafo, "x~value", x = "trigger_begin", value=time)
+
+# Generate parameter transformation
+p <- P(trafo)
+
+# Generate prediction function from ODE model
+x <- NULL
+for(con in names(trafo)) x <- x + Xs(Elf_model, condition=con)
+
+
+
+# Simuate data
+# Define time points for simulation, day in december 
+timesD <- seq(0,24, len=100) 
+
+# Define parameter values for data simulation
+pars <- c(u = 0, trigger = 2,
+          activateB = 0.1, activateC = 0.1, activateD = 0.1,
+          deactivateB = 0.2, deactivateC = 0.2, deactivateD = 0.2,
+          deactivateBByD = 1,
+          B = 0.9, actB = 0.1, C = 0.8, actC = 0.2, D = 0.8, actD = 0.2,
+          prodGbyB = 1, prodGbyC = 1, prodGbyD = 1, 
+          Gifts = 0, stealGifts = 1,
+          scale = 10)
+
+# Generate a prediction
+# Define time points for simulation, day in december 
+times <- seq(0, 24, .1)
+out <- (g*x*p)(times, pars)
+
+plotPrediction(out) 
+
+```
+
+Santa realizes that this model is not yet realistic. For the time before he triggers the elves to work, Santa wants to have his model in a steady state. Of course he could solve the steady-state equations analytically by himself, however, today he wants to use the function steadyStates that is provided by dMod.
+
+So he tries
+```{r, echo=TRUE, message=FALSE}
+mysteadies <- steadyStates(reactions)
+trafoSS <- insert(trafo, "x~steadyEqn", x = names(mysteadies), steadyEqn = mysteadies)
+pSS <- P(trafoSS)
+out <- (g*x*pSS)(times, pars)
+plotPrediction(out) 
+```
+
+This looks better! Please note that with the steady-state transformations we reduced the parameter space by 4. We always reduce the number of parameters by the number of states (in our case 7) minus the number of conserved quantities (in our case 3).
+
+Let us have a look at the steady-state solution that we obtained:
+```{r, echo=TRUE, message=FALSE}
+print(as.eqnvec(mysteadies))
+```
+
+Santa realizes that the parameter $actC$ is expressed within the steady-state equations. However, for later use of this model he would like $actC$ to be a parameter because many, many years ago he measured this parameter directly. So he wants to fix it to the value he measured. On top of that, he wants the steady-state solution to be calculated for $u=0$. Both he can achieve by
+
+```{r, echo=TRUE, message=FALSE}
+mysteadies <- steadyStates(reactions, neglect = c("actC"), forcings = c("u"))
+print(as.eqnvec(mysteadies))
+```
+
+We see that instead for $actC$ the equations are solved for $activateC$. $actC$ appears on the right hand side and is no longer fixed by the steady-state solution. And the input $u$ does not appear in the equations. It was set to 0 internally.
+
+That's it for today. During the next days, we will see how Santa is proceeding with this model.

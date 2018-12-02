@@ -1,0 +1,67 @@
+---
+title: "Symmetry Detection for Santa's Elf Model"
+author: "Marcus Rosenblatt"
+date: "December 6th, 2018"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+We recall Santa's Elf model from calendar door 5. If you did not yet look into calendar door 5 (Steady States), we recommend to do this first.
+
+```{r, echo=TRUE, message=FALSE}
+
+# Load package dMod
+library(dMod)
+
+# Define reactions
+reactions <- NULL
+reactions <- addReaction(reactions, "B", "actB", rate = "(trigger*u + activateB)*B", description = "Activation of B")
+reactions <- addReaction(reactions, "actB", "B", rate = "deactivateB*actB*(1+deactivateBByD*actD)", description = "Deactivation of B")
+reactions <- addReaction(reactions, "C", "actC", rate = "activateC*C*actB", description = "Activation of C")
+reactions <- addReaction(reactions, "actC", "C", rate = "deactivateC*actC", description = "Deactivation of C")
+reactions <- addReaction(reactions, "D", "actD", rate = "activateD*D*actC", description = "Activation of D")
+reactions <- addReaction(reactions, "actD", "D", rate = "deactivateD*actD", description = "Deactivation of D")
+reactions <- addReaction(reactions, "", "Gifts", rate = "prodGbyB*actB+prodGbyC*actC+prodGbyD*actD", description = "Production of Gifts")
+reactions <- addReaction(reactions, "Gifts", "", rate = "stealGifts*Gifts", description = "Disappearing Gifts")
+
+# In order to use u with events, it has to be defined as a state variable
+reactions <- addReaction(reactions, "", "u", rate = "0", description = "")
+
+# Translate into ODE model
+Elf_model <- odemodel(reactions, modelname = "Elfmodel",
+                      events = rbind(data.frame(var = "u", time = "trigger_begin", value = "1", method = "replace"),
+                                     data.frame(var = "u", time = "trigger_end", value = "0", method = "replace")))
+
+# Define observations
+observables <- eqnvec(
+  G_obs = "scale*Gifts")
+```
+
+Often models like these appear to be highly overparameterized when written down for the first time. When you want to fit your model to experimental data, having non-identifiable parameters can slow down your optimization and can make results difficult to interprete. Before fitting at all and for example performing an identifiability analysis via the profile likelihood method, it is usually worth it to remove structural non-identifiabilities of your model. These for example appear, if two or more parameters are connected in the sense that you can increase one of them and decrease the other one while obtaining the same model trajectories. 
+
+Most of these can be found by the symmetryDetection function that is provided in dMod. Let us see what happens when we apply the function to our previously defined Elf model:
+```{r, echo=TRUE, message=TRUE}
+symmetryDetection(reactions, obsvect = observables)
+```
+
+$Epsilon$ is an arbitrary generator of the transformation. $Exp(epsilon)$ gives an arbitrary positive value. Following transformation number 4, the interepretation is that we can multiply $activateD$ and $prodGbyC$ by a factor and simultaneously devide $C$ and $actC$ by the same factor. The resulting trajectories for our observable would be the same and therefore based on our data we could not distinguish between these solutions. Without loss of generality we could fix either of these parameters to some value unequal to 0.
+
+But first let us recall our steady-state solution that we derived yesterday:
+
+```{r, echo=TRUE, message=FALSE}
+mysteadies <- steadyStates(reactions, neglect = c("actC"), forcings = c("u"))
+print(as.eqnvec(mysteadies))
+```
+
+We find that by using the steady-state transformation, we fix the parameters $actB$, $activateC$, $D$ and $Gifts$ with respect to the other parameters. Apart from that also the input $u$ should be handled as a fixed parameter, since we define its value via the event list. We tell the symmetryDetection algorithm that these parameters are already fixed by the following:
+
+```{r, echo=TRUE, message=TRUE}
+symmetryDetection(reactions, obsvect = observables, fixed=c("actB", "activateC", "D", "Gifts", "u"))
+```
+
+Now we only remain with one transformation of type scaling. This one could for example be fixed by providing a value for $actC$ which is exactly what Santa thought about yesterday. Let us see how he proceeds with this model during the next days.
