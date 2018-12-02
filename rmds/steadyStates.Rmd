@@ -59,7 +59,7 @@ rownames(condition.grid) <- paste0("time",triggertimes)
 
 # deinfe parameter transformation
 mypars <- unique(c(getParameters(g), getParameters(Elf_model)))
-trafo <- define(NULL, "x~y", x = mypars, y = mypars)
+trafo <- structure(mypars, names = mypars)
 trafo <- branch(trafo, condition.grid)
 trafo <- insert(trafo, "x~y", x = "trigger_end", y = "trigger_begin+1")
 trafo <- insert(trafo, "x~value", x = "trigger_begin", value=time)
