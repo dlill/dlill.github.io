@@ -16,4 +16,6 @@
 
 [solvers.html](html/solvers.html)
 
+[symmtetryDetection.html](html/symmtetryDetection.html)
+
 
