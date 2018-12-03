@@ -45,7 +45,7 @@ htmls2 %>% paste0("[", ., "]", "(html/", ., ")") %>% paste0(collapse = "\n\n") %
 system2("pandoc", c("-o index.html", "index.md"))
 
 
-git2r::add(".", "index.html")
+git2r::add(".", paste0("index.", c("md", "html")))
 git2r::commit(message = "update index")
 
 htmls2 %>% paste0("[", ., "]", "(html/", ., ")") %>% paste0(collapse = "\n\n") %>% paste0("\n\n") %>% writeLines("Readme.md")

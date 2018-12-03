@@ -22,4 +22,8 @@
 
 [solvers.html](html/solvers.html)
 
+[steadyStates.html](html/steadyStates.html)
+
+[symmtetryDetection.html](html/symmtetryDetection.html)
+
 
