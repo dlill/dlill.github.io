@@ -48,7 +48,7 @@ Most of these can be found by the symmetryDetection function that is provided in
 symmetryDetection(reactions, obsvect = observables)
 ```
 
-```{r, include=FALSE}
+```{r, echo=FALSE}
 cat("Reading input...done
 Preparing equations...done
 
@@ -113,7 +113,7 @@ But first let us recall our steady-state solution that we derived yesterday:
 mysteadies <- steadyStates(reactions, neglect = c("actC"), forcings = c("u"))
 print(as.eqnvec(mysteadies))
 ```
-```{r, include=FALSE}
+```{r, echo=FALSE}
 cat("Reading csv-file ...
 Removed 1 fluxes that are a priori zero!
 No states found that are a priori zero!
@@ -177,7 +177,7 @@ We find that by using the steady-state transformation, we fix the parameters $ac
 ```{r, echo=TRUE, message=TRUE}
 symmetryDetection(reactions, obsvect = observables, fixed=c("actB", "activateC", "D", "Gifts", "u")) 
 ```
-```{r, include=FALSE}
+```{r, echo=FALSE}
 cat("Fixed variables: actB, activateC, D, Gifts, u
 
 Reading input...done

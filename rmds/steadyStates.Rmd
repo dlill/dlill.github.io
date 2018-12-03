@@ -101,7 +101,7 @@ So he tries
 ```{r, echo=TRUE, message=FALSE}
 mysteadies <- steadyStates(reactions)
 ```
-```{r, include=FALSE}
+```{r, echo=FALSE}
 cat("Reading csv-file ...
 Removed 1 fluxes that are a priori zero!
 No states found that are a priori zero!
@@ -169,6 +169,63 @@ Santa realizes that the parameter $actC$ is expressed within the steady-state eq
 ```{r, echo=TRUE, message=FALSE}
 mysteadies <- steadyStates(reactions, neglect = c("actC"), forcings = c("u"))
 print(as.eqnvec(mysteadies))
+```
+```{r, echo=TRUE}
+cat("Reading csv-file ...
+Removed 1 fluxes that are a priori zero!
+No states found that are a priori zero!
+Rank of SM is 4!
+Sparsify stoichiometry matrix with sparsify-level 2!
+
+Finding conserved quantities ...
+['B + actB = totalB', 'C + actC = totalC', 'D + actD = totalD']
+
+Define graph structure ...
+
+Removing cycle 1
+   B --> Done by CQ
+Removing cycle 2
+   actD --> Done by CQ
+Removing cycle 3
+   C --> Done by CQ
+Removing cycle 4
+   actC --> activateC
+There is no cycle in the system!
+
+Solving remaining equations ...
+
+Testing Steady State...
+
+Solution is correct!
+
+I obtained the following equations:
+
+	D = actD*deactivateD/(actC*activateD)
+
+	Gifts = (B*activateB*prodGbyB + actC*actD*deactivateB*deactivateBByD*prodGbyC + actC*deactivateB*prodGbyC + actD**2*deactivateB*deactivateBByD*prodGbyD + actD*deactivateB*prodGbyD)/(deactivateB*stealGifts*(actD*deactivateBByD + 1))
+
+	actB = B*activateB/(deactivateB*(actD*deactivateBByD + 1))
+
+	activateC = actC*deactivateC/(C*actB)
+
+	C = C
+
+	actD = actD
+
+	B = B
+
+Number of Species:  7
+Number of Equations:  7
+Number of new introduced variables:  0
+Idx     Inner <- Outer
+  3      actB <- B*activateB/(deactivateB*(actD*deactivateBByD+1))
+  6      actD <- actD
+  4 activateC <- actC*deactivateC/(C*actB)
+  7         B <- B
+  5         C <- C
+  1         D <- actD*deactivateD/(actC*activateD)
+  2     Gifts <- (B*activateB*prodGbyB+actC*actD*deactivateB*deactivateBByD*prodGbyC+actC*deactivateB*prodGbyC
+                 +actD**2*deactivateB*deactivateBByD*prodGbyD+actD*deactivateB*prodGbyD)/(deactivateB*stealGifts*(actD*deactivateBByD+1))")
 ```
 
 We see that instead for $actC$ the equations are solved for $activateC$. $actC$ appears on the right hand side and is no longer fixed by the steady-state solution. And the input $u$ does not appear in the equations. It was set to 0 internally.
