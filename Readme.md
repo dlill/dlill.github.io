@@ -18,6 +18,8 @@
 
 [Pimpl_Pexpl.html](html/Pimpl_Pexpl.html)
 
+[plotValues_plotPars.html](html/plotValues_plotPars.html)
+
 [profiles.html](html/profiles.html)
 
 [solvers.html](html/solvers.html)
