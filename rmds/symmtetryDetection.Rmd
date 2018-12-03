@@ -1,7 +1,6 @@
 ---
 title: "Symmetry Detection for Santa's Elf Model"
 author: "Marcus Rosenblatt"
-date: "December 6th, 2018"
 output:
   html_document: default
   pdf_document: default

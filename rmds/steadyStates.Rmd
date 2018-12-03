@@ -1,7 +1,6 @@
 ---
 title: "Steady States for Santa"
 author: "Marcus Rosenblatt"
-date: "December 5th, 2018"
 output:
   html_document: default
   pdf_document: default
