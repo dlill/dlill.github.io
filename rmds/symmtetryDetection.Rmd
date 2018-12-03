@@ -48,6 +48,63 @@ Most of these can be found by the symmetryDetection function that is provided in
 symmetryDetection(reactions, obsvect = observables)
 ```
 
+```{r, include=FALSE}
+cat("Reading input...done
+Preparing equations...done
+
+Building system...100%
+Combining system...done
+
+Solving system of size 136x63...done
+
+Processing results...
+  calculating solution space
+  substituting solutions
+done
+
+
+5 transformation(s) found:
+variable       : infinitesimal  : transformation
+-------------------------------------------------------------
+#1: Type: scaling
+B              : -B             : B*exp(-epsilon)
+actB           : -actB          : actB*exp(-epsilon)
+C              : -C             : C*exp(-epsilon)
+actC           : -actC          : actC*exp(-epsilon)
+D              : -D             : D*exp(-epsilon)
+actD           : -actD          : actD*exp(-epsilon)
+Gifts          : -Gifts         : Gifts*exp(-epsilon)
+activateC      : activateC      : activateC*exp(epsilon)
+activateD      : activateD      : activateD*exp(epsilon)
+deactivateBByD : deactivateBByD : deactivateBByD*exp(epsilon)
+scale          : scale          : scale*exp(epsilon)
+-------------------------------------------------------------
+#2: Type: scaling
+u              : -u             : u*exp(-epsilon)
+trigger        : trigger        : trigger*exp(epsilon)
+-------------------------------------------------------------
+#3: Type: scaling
+D              : -D             : D*exp(-epsilon)
+actD           : -actD          : actD*exp(-epsilon)
+deactivateBByD : deactivateBByD : deactivateBByD*exp(epsilon)
+prodGbyD       : prodGbyD       : prodGbyD*exp(epsilon)
+-------------------------------------------------------------
+#4: Type: scaling
+C              : -C             : C*exp(-epsilon)
+actC           : -actC          : actC*exp(-epsilon)
+activateD      : activateD      : activateD*exp(epsilon)
+prodGbyC       : prodGbyC       : prodGbyC*exp(epsilon)
+-------------------------------------------------------------
+#5: Type: scaling
+B              : -B             : B*exp(-epsilon)
+actB           : -actB          : actB*exp(-epsilon)
+activateC      : activateC      : activateC*exp(epsilon)
+prodGbyB       : prodGbyB       : prodGbyB*exp(epsilon)
+
+Total time: 00h:00m:01s")
+```
+
+
 $Epsilon$ is an arbitrary generator of the transformation. $Exp(epsilon)$ gives an arbitrary positive value. Following transformation number 4, the interepretation is that we can multiply $activateD$ and $prodGbyC$ by a factor and simultaneously devide $C$ and $actC$ by the same factor. The resulting trajectories for our observable would be the same and therefore based on our data we could not distinguish between these solutions. Without loss of generality we could fix either of these parameters to some value unequal to 0.
 
 But first let us recall our steady-state solution that we derived yesterday:
@@ -56,11 +113,101 @@ But first let us recall our steady-state solution that we derived yesterday:
 mysteadies <- steadyStates(reactions, neglect = c("actC"), forcings = c("u"))
 print(as.eqnvec(mysteadies))
 ```
+```{r, include=FALSE}
+cat("Reading csv-file ...
+Removed 1 fluxes that are a priori zero!
+No states found that are a priori zero!
+Rank of SM is 4!
+Sparsify stoichiometry matrix with sparsify-level 2!
+
+Finding conserved quantities ...
+['B + actB = totalB', 'C + actC = totalC', 'D + actD = totalD']
+
+Define graph structure ...
+
+Removing cycle 1
+   B --> Done by CQ
+Removing cycle 2
+   actD --> Done by CQ
+Removing cycle 3
+   C --> Done by CQ
+Removing cycle 4
+   actC --> activateC
+There is no cycle in the system!
+
+Solving remaining equations ...
+
+Testing Steady State...
+
+Solution is correct!
+
+I obtained the following equations:
+
+	D = actD*deactivateD/(actC*activateD)
+
+	Gifts = (B*activateB*prodGbyB + actC*actD*deactivateB*deactivateBByD*prodGbyC + actC*deactivateB*prodGbyC + actD**2*deactivateB*deactivateBByD*prodGbyD + actD*deactivateB*prodGbyD)/(deactivateB*stealGifts*(actD*deactivateBByD + 1))
+
+	actB = B*activateB/(deactivateB*(actD*deactivateBByD + 1))
+
+	activateC = actC*deactivateC/(C*actB)
+
+	C = C
+
+	actD = actD
+
+	B = B
+
+Number of Species:  7
+Number of Equations:  7
+Number of new introduced variables:  0
+Idx     Inner <- Outer
+  3      actB <- B*activateB/(deactivateB*(actD*deactivateBByD+1))
+  6      actD <- actD
+  4 activateC <- actC*deactivateC/(C*actB)
+  7         B <- B
+  5         C <- C
+  1         D <- actD*deactivateD/(actC*activateD)
+  2     Gifts <- (B*activateB*prodGbyB+actC*actD*deactivateB*deactivateBByD*prodGbyC+actC*deactivateB*prodGbyC
+                 +actD**2*deactivateB*deactivateBByD*prodGbyD+actD*deactivateB*prodGbyD)/(deactivateB*stealGifts*(actD*deactivateBByD+1))")
+```
+
 
 We find that by using the steady-state transformation, we fix the parameters $actB$, $activateC$, $D$ and $Gifts$ with respect to the other parameters. Apart from that also the input $u$ should be handled as a fixed parameter, since we define its value via the event list. We tell the symmetryDetection algorithm that these parameters are already fixed by the following:
 
 ```{r, echo=TRUE, message=TRUE}
-symmetryDetection(reactions, obsvect = observables, fixed=c("actB", "activateC", "D", "Gifts", "u"))
+symmetryDetection(reactions, obsvect = observables, fixed=c("actB", "activateC", "D", "Gifts", "u")) 
+```
+```{r, include=FALSE}
+cat("Fixed variables: actB, activateC, D, Gifts, u
+
+Reading input...done
+Preparing equations...done
+
+Building system...100%
+Combining system...done
+
+Solving system of size 99x48...done
+
+Processing results...
+  calculating solution space
+  substituting solutions
+done
+
+
+1 transformation(s) found:
+variable  : infinitesimal : transformation
+--------------------------------------------------
+#1: Type: scaling
+C         : -C            : C*exp(-epsilon)
+actC      : -actC         : actC*exp(-epsilon)
+activateD : activateD     : activateD*exp(epsilon)
+prodGbyC  : prodGbyC      : prodGbyC*exp(epsilon)
+
+Total time: 00h:00m:00s")
 ```
 
-Now we only remain with one transformation of type scaling. This one could for example be fixed by providing a value for $actC$ which is exactly what Santa thought about yesterday. Let us see how he proceeds with this model during the next days.
+
+Now we only remain with one transformation of type scaling. This one could for example be fixed by providing a value for $actC$ which is exactly what Santa thought about yesterday. Let us see how he proceeds with this model during the next days
+
+
+.

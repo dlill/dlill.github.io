@@ -101,6 +101,52 @@ So he tries
 ```{r, echo=TRUE, message=FALSE}
 mysteadies <- steadyStates(reactions)
 ```
+```{r, include=FALSE}
+cat("Reading csv-file ...
+Removed 1 fluxes that are a priori zero!
+No states found that are a priori zero!
+Rank of SM is 4!
+Sparsify stoichiometry matrix with sparsify-level 2!
+
+Finding conserved quantities ...
+['B + actB = totalB', 'C + actC = totalC', 'D + actD = totalD']
+
+Define graph structure ...
+
+Removing cycle 1
+   B --> Done by CQ
+Removing cycle 2
+   actD --> Done by CQ
+Removing cycle 3
+   C --> Done by CQ
+There is no cycle in the system!
+
+Solving remaining equations ...
+
+Testing Steady State...
+
+Solution is correct!
+
+I obtained the following equations:
+
+	D = actD*deactivateB*deactivateC*deactivateD*(actD*deactivateBByD + 1)/(B*C*activateC*activateD*(activateB + trigger*u))
+
+	Gifts = (B*C*activateB*activateC*prodGbyC + B*C*activateC*prodGbyC*trigger*u + B*activateB*deactivateC*prodGbyB + B*deactivateC*prodGbyB*trigger*u + actD**2*deactivateB*deactivateBByD*deactivateC*prodGbyD + actD*deactivateB*deactivateC*prodGbyD)/(deactivateB*deactivateC*stealGifts*(actD*deactivateBByD + 1))
+
+	actC = B*C*activateC*(activateB + trigger*u)/(deactivateB*deactivateC*(actD*deactivateBByD + 1))
+
+	actB = B*(activateB + trigger*u)/(deactivateB*(actD*deactivateBByD + 1))
+
+	C = C
+
+	actD = actD
+
+	B = B
+
+Number of Species:  7
+Number of Equations:  7
+Number of new introduced variables:  0")
+```
 ```{r, echo=FALSE, message=FALSE, include=FALSE}
 assign("mysteadies", mysteadies, .GlobalEnv)
 ```
