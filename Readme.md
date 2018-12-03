@@ -14,6 +14,10 @@
 
 [lists.html](html/lists.html)
 
+[Optimization_functions_in_dMod.html](html/Optimization_functions_in_dMod.html)
+
+[Pimpl_Pexpl.html](html/Pimpl_Pexpl.html)
+
 [solvers.html](html/solvers.html)
 
 [steadyStates.html](html/steadyStates.html)
