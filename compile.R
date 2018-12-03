@@ -4,8 +4,8 @@ library(rmarkdown)
 rmds <- list.files("rmds/", pattern = "[Rr]md")
 htmls <- list.files("html/", "html$")
 
-unlink("html/steadyStates.html")
-unlink("html/symmtetryDetection.html")
+# unlink("html/steadyStates.html")
+# unlink("html/symmtetryDetection.html")
 not_yet_rendered <- rmds[!str_detect(rmds, paste0(str_remove_all(htmls, "html"), collapse = "|"))]
 
 # to_render <- rmds
