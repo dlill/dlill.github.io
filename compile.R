@@ -5,6 +5,7 @@ rmds <- list.files("rmds/", pattern = "[Rr]md")
 htmls <- list.files("html/", "html$")
 not_yet_rendered <- rmds[!str_detect(rmds, paste0(str_remove_all(htmls, "html"), collapse = "|"))]
 
+# unlink("html/Optimization_functions_in_dMod.html")
 # to_render <- rmds
 to_render <- not_yet_rendered
 # to_render <- "getSymbols.Rmd"

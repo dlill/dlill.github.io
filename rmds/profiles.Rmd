@@ -1,0 +1,138 @@
+---
+title: "Profile likelihood"
+author: "Svenja"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE}
+library(dMod)
+```
+
+This calander door gives you a basic overview about how you can perform **profile likelihood** calculations with dMod and how you can display the resulting profiles. The procedure will be exemplified with the following ABC toymodel:
+
+![](ABC_model_scheme.png)
+
+```{r}
+
+### This Code defines the ABC toymodel ###
+
+# Define reactions
+reactions <- NULL
+reactions <- addReaction(reactions, "A_state", "B_state",
+                         rate = "k1*A_state",
+                         description = "A to B")
+reactions <- addReaction(reactions, "B_state", "C_state",
+                         rate = "k2*B_state",
+                         description = "B to C")
+reactions <- addReaction(reactions, "C_state", "A_state",
+                         rate = "k3*C_state",
+                         description = "C to A")
+
+# Translate into ODE model
+ABC_model <- odemodel(reactions, modelname = "ABCmodel")
+
+# Generate prediction function from ODE model
+x <- Xs(ABC_model, condition = NULL)
+
+# Define observations
+observables <- eqnvec(
+  B_obs = "scale*B_state",
+  C_obs = "scale*C_state")
+
+# Generate observation function
+g <- Y(observables, f = reactions, condition = NULL,
+       compile = TRUE, modelname = "obsfn")
+
+
+# Simuate data
+# Define time points for data simulation
+timesD <- c(3, 11, 20, 35, 50) #c(0.1, 1, 3, 7, 11, 15, 20, 41) 
+
+# Define parameter values for data simulation
+pars <- c(A_state = 0.93,  
+          B_state = 0.1,    
+          C_state = 0.1,    
+          k1 = 0.2,
+          k2 = 0.072,
+          k3 = 0.1,
+          scale = 1e3)
+
+# Generate a prediction
+times <- seq(0, 50, .1)
+out <- (g*x)(times, pars, conditions = "standard")
+
+datasheet <- subset(wide2long(out), time %in% timesD & name %in% names(observables))
+datasheet$sigma <- sqrt(datasheet$value + 1)
+datasheet$value <- rnorm(nrow(datasheet), datasheet$value, datasheet$sigma)
+
+data <- as.datalist(datasheet)
+
+# Log-transform parameters for fitting
+innerpars <- unique(c(getParameters(ABC_model), getParameters(g)))
+trafo <- as.eqnvec(innerpars, names = innerpars) 
+
+p <- P(
+  trafo <- repar("x ~ exp(x)", trafo, x = innerpars),
+  condition = "standard")
+
+outerpars <- getParameters(p)
+parinit <- structure(rep(-1, length(outerpars)), names = outerpars)
+
+# Generate objective function (to be optimized)
+obj <- normL2(data, g*x*p) + constraintL2(parinit, sigma = 10)
+
+### End model definition ###
+
+# Perform a multi-start optimization
+out_mstrust <- mstrust(obj, parinit, rinit = 1, rmax = 10, iterlim = 500,
+                       cores = detectFreeCores(), fits = 10)
+
+fitlist <- as.parframe(out_mstrust)
+
+```
+
+#### 1. **Calculate** the profile likelihood:
+
+The profile likelihood can be computed with the function **profile()**. Depending on the size of your model it is recommendable to run the computation on an external machine. 
+
+```{r}
+bestfit <- as.parvec(fitlist, 1)
+whichPar <- names(bestfit)
+myprofiles <- profile(obj, bestfit, whichPar,
+                      limits = c(-5, 5), algoControl = list(reg = 0),
+                      cores = min(length(whichPar),detectFreeCores()))
+```
+
+You have to define the parameter vector corresponding to the analyzed optimum, here *bestfit*, and a vector containing the parameters for which the profiles are computed, *whichPar*. To extend the analyzed parameter value range the maximal lower and the upper deviance from the original value can be adjusted in *limits*.
+
+#### 2. **Plot** profiles:
+
+Profiles can be easily visualized using **plotProfile()**. If a prior was defined in the objective function, the different contributions of prior and data can be seperately displayed defining the *mode*.
+
+```{r}
+plotProfile(myprofiles)
+```
+
+
+```{r}
+plotProfile(myprofiles, mode == "data")
+```
+
+#### 3. Analyzing parameter dependencies:
+
+**Parameter dependecies** can be displayed by profile paths using **plotPaths()**. 
+
+```{r}
+plotPaths(myprofiles)
+```
+
+In order to analyze only dependencies of a specific parameter, this parameter can be defined in *whichPar*:
+
+```{r}
+plotPaths(myprofiles, whichPar = "A_state")
+```
+
