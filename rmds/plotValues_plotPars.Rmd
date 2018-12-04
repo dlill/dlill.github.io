@@ -1,5 +1,5 @@
 ---
-title: "Optimization functions in dMod"
+title: "Visualization of multi-start optimization"
 author: "Svenja Kemmer"
 output: html_document
 ---
@@ -12,11 +12,9 @@ knitr::opts_chunk$set(echo = TRUE)
 library(dMod)
 ```
 
-
-This calander door gives you a basic overview about the two major **optimization functions** used in dMod which are **trust()** for single fits and **mstrust()** for multi-start optimization. They will be exemplified with the following ABC toymodel:
+Today we will introduce you to the two **plotting** functions **plotValues()** and **plotPars()** you can use to analyze your fitlist obtained from optimization e.g. with *mstrust()*. They will be exemplified with the following ABC toymodel:
 
 ![](ABC_model_scheme.png)
-
 
 ```{r}
 
@@ -89,47 +87,46 @@ obj <- normL2(data, g*x*p) + constraintL2(parinit, sigma = 10)
 
 ### End model definition ###
 
-```
-
-#### 1. trust():
-
-- single fit starting the optimization at the parameter values defined in *parinit* (here chosen as -1 for all parameters)
-- you can define **borders** via *parupper* and *parlower* to restrict the parameter space  
-
-The following code produces a single fit for the ABC model and plots the fit together with simulated data.
-
-```{r}
-
-myfit <- trust(obj, parinit, rinit = 1, rmax = 10, iterlim = 50, parupper = 5, parlower = -10)
-plot((g*x*p)(times, myfit$argument), data)
-
-```
-
-
-
-#### 2. mstrust():
-
-- multiple fits (number of fits is specified in *fits*) starting from different parameter values randomly sampled around the values defined in *parinit*. You can adjust the distribution from which values are drawn under *samplefun*, the default is a normal distribution
-- you can **parallelize** the fits on several cores of a machine by defining the precise number of cores to use or by using all free cores detected via **detectFreeCores()**
-- this function is just a wrapper around the trust function and thus provides all options present in trust(), e.g. you can also use borders
-
-In the following a multi-start optimization with 50 fits is performed 
-
-```{r}
-
-out_mstrust <- mstrust(obj, parinit, rinit = 1, rmax = 10, iterlim = 1000,
-                       cores = detectFreeCores(), fits = 50)
+# Perform a multi-start optimization
+out_mstrust <- mstrust(obj, parinit, rinit = 1, rmax = 10, iterlim = 500,
+                       cores = detectFreeCores(), fits = 100)
 
 fitlist <- as.parframe(out_mstrust)
-plotValues(fitlist)
 
 ```
 
-You can then analyze the different fits of your optimization run e.g. the bestfit which is in this simple model most often identical with the single fit result from *trust()*:
+
+
+#### Plotting objective values of a multi-start optimization:
+
+In order to displays the ordered **objective values** of your fitlist you can use the function **plotValues()**. 
 
 ```{r}
-bestfit <- as.parvec(fitlist,1) # check fit No. 1
-plot((g*x*p)(times, bestfit), data)
+plotValues(fitlist, tol = 1)
+```
+
+Dashed lines indicate a jump to the next local optimum and display the first fitting index per optimum respectively. The maximal allowed difference between neighboring objective values to be matched to the same optimum is defined in *tol*.
+
+To zoom in you can simply make this plot for a subset of your fitlist:
+
+```{r}
+plotValues(fitlist[1:20])
 ```
 
 
+#### Plotting parameter values:
+
+The function **plotPars()** displays the **parameter values** belonging to the different optima of your multi-start optimization run. Values of each optimum are displayed in another color. Again, *tol* defines the maximal allowed difference between neighboring objective values to be recognized as one.
+
+```{r}
+plotPars(fitlist, tol = 0.1)
+```
+
+To analyze parameter values of specific fits, e.g. the best one, just subset your fitlist:
+
+```{r}
+plotPars(fitlist[1])
+```
+
+
+**Note:** Both functions can also be used with the **dMod.frame** by defining the additional argument *hypothesis*.

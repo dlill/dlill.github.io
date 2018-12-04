@@ -1,0 +1,44 @@
+---
+title: "runbg()"
+author: "Svenja"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE}
+library(dMod)
+```
+
+Today we will introduce you to the function **runbg()** which enables you to run processes via scp on an external machine e.g. an external computer or a computig cluster. 
+
+#### runbg():
+
+Performing computational expensive processes like e.g. multi-start optimization runs of large models can take much time and block the cores of your computer. In order to outsource processes like these you can run them on an external machine (here called *knecht1.fdm.uni-freiburg.de*) using **runbg()**. Note: **ssh-key needed** for the external machine!
+
+
+```{r, eval=FALSE}
+out_job1 <- runbg({
+  mstrust(obj, parinit, rinit = 1, rmax = 10, parupper = 5, parlower = -10,
+          cores = detectFreeCores(), fits = 20)
+}, machine = "knecht1.fdm.uni-freiburg.de", filename = "job1")
+```
+
+There exist three additional functions **check()**, **get()** and **purge()** being used together with *runbg()*.
+
+- **check()** checks if the result on the external machine is ready
+- **get()** copies the result file from the external computer to the local working directory and loads it into the workspace as an object called .runbgOutput
+- **purge()** deletes the temporary folder from the working directory and the remote machine
+
+```{r, eval=FALSE}
+out_job1$check() 
+output <- out_job1$get() # assigns .runbgOutput to output
+fitlist <- do.call(rbind, lapply(output, as.parframe)) # saves fit results from mstrust() in fitlist
+fitlist <- myframe[order(myframe$value),] # orders fits according to the value of their objective function
+```
+
+The three functions *check()*, *get()* and *purge()* can be recovered (e.g. when a session has crashed) with the additional runbg-argument **recover = TRUE**. Then, the three functions are recreated without restarting the job.
+
+**Note:** There exists the extra function **runbg_bwfor()** to use runbg on the computing cluster [bwhpc cluster](https://www.bwhpc-c5.de/wiki/index.php/Category:BwForCluster_MLS&WISO_Production).
