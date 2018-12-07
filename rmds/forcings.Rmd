@@ -1,0 +1,195 @@
+---
+title: "What does the forcings argument do?"
+author: "Marcus Rosenblatt"
+date: "December 8th, 2018"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Today we want to learn how the argument forcings works and how it can be helpful. Like the name says it can be used to force parts of your dynamic model to take certain values that you define. 
+
+To show an example we again recall Santa's Elf model from calendar door 5. We take the version with trajectories starting at steady state.
+
+```{r, echo=TRUE, message=FALSE}
+
+# Load package dMod
+library(dMod)
+library(ggplot2)
+
+# Define reactions
+reactions <- NULL
+reactions <- addReaction(reactions, "B", "actB", rate = "(trigger*u + activateB)*B", description = "Activation of B")
+reactions <- addReaction(reactions, "actB", "B", rate = "deactivateB*actB*(1+deactivateBByD*actD)", description = "Deactivation of B")
+reactions <- addReaction(reactions, "C", "actC", rate = "activateC*C*actB", description = "Activation of C")
+reactions <- addReaction(reactions, "actC", "C", rate = "deactivateC*actC", description = "Deactivation of C")
+reactions <- addReaction(reactions, "D", "actD", rate = "activateD*D*actC", description = "Activation of D")
+reactions <- addReaction(reactions, "actD", "D", rate = "deactivateD*actD", description = "Deactivation of D")
+reactions <- addReaction(reactions, "", "Gifts", rate = "prodGbyB*actB+prodGbyC*actC+prodGbyD*actD", description = "Production of Gifts")
+reactions <- addReaction(reactions, "Gifts", "", rate = "stealGifts*Gifts", description = "Disappearing Gifts")
+
+# In order to use u with events, it has to be defined as a state variable
+reactions <- addReaction(reactions, "", "u", rate = "0", description = "")
+
+# Translate into ODE model
+Elf_model <- odemodel(reactions, modelname = "Elfmodel",
+                      events = rbind(data.frame(var = "u", time = "trigger_begin", value = "1", method = "replace"),
+                                     data.frame(var = "u", time = "trigger_end", value = "0", method = "replace")))
+
+# Define observations
+observables <- eqnvec(
+  G_obs = "scale*Gifts")
+
+# Generate observation function
+g <- Y(observables, f = reactions, compile = TRUE, modelname = "obsfn")
+
+triggertimes <- c(5,10,15,20)
+condition.grid <- data.frame(time = triggertimes)
+rownames(condition.grid) <- paste0("time",triggertimes)
+
+# deinfe parameter transformation
+mypars <- unique(c(getParameters(g), getParameters(Elf_model)))
+trafo <- define(NULL, "x~y", x = mypars, y = mypars)
+trafo <- branch(trafo, condition.grid)
+trafo <- insert(trafo, "x~y", x = "trigger_end", y = "trigger_begin+1")
+trafo <- insert(trafo, "x~value", x = "trigger_begin", value=time)
+
+# Generate parameter transformation
+p <- P(trafo)
+
+# Generate prediction function from ODE model
+x <- NULL
+for(con in names(trafo)) x <- x + Xs(Elf_model, condition=con)
+
+
+
+# Simuate data
+# Define time points for simulation, day in december 
+timesD <- seq(0,24, len=100) 
+
+# Define parameter values for data simulation
+pars <- c(u = 0, trigger = 2,
+          activateB = 0.1, activateC = 0.1, activateD = 0.1,
+          deactivateB = 0.2, deactivateC = 0.2, deactivateD = 0.2,
+          deactivateBByD = 1,
+          B = 0.9, actB = 0.1, C = 0.8, actC = 0.2, D = 0.8, actD = 0.2,
+          prodGbyB = 1, prodGbyC = 1, prodGbyD = 1, 
+          Gifts = 0, stealGifts = 1,
+          scale = 10)
+
+# Generate a prediction
+# Define time points for simulation, day in december 
+times <- seq(0, 24, .1)
+
+mysteadies <- steadyStates(reactions)
+trafoSS <- insert(trafo, "x~steadyEqn", x = names(mysteadies), steadyEqn = mysteadies)
+pSS <- P(trafoSS)
+out <- (g*x*pSS)(times, pars)
+plotPrediction(out)
+
+```
+
+Instead of defining the input $u$ via events, we can define it via using the forcings argument. First we define the reactions as usual.
+
+```{r, echo=TRUE, message=FALSE}
+
+# Load package dMod
+# Load package dMod
+library(dMod)
+library(ggplot2)
+
+# Define reactions
+reactions <- NULL
+reactions <- addReaction(reactions, "B", "actB", rate = "(trigger*u + activateB)*B", description = "Activation of B")
+reactions <- addReaction(reactions, "actB", "B", rate = "deactivateB*actB*(1+deactivateBByD*actD)", description = "Deactivation of B")
+reactions <- addReaction(reactions, "C", "actC", rate = "activateC*C*actB", description = "Activation of C")
+reactions <- addReaction(reactions, "actC", "C", rate = "deactivateC*actC", description = "Deactivation of C")
+reactions <- addReaction(reactions, "D", "actD", rate = "activateD*D*actC", description = "Activation of D")
+reactions <- addReaction(reactions, "actD", "D", rate = "deactivateD*actD", description = "Deactivation of D")
+reactions <- addReaction(reactions, "", "Gifts", rate = "prodGbyB*actB+prodGbyC*actC+prodGbyD*actD", description = "Production of Gifts")
+reactions <- addReaction(reactions, "Gifts", "", rate = "stealGifts*Gifts", description = "Disappearing Gifts")
+
+```
+In the odemodel function, we have to tell the model that $u$ shall be interpreted as a forcing.
+```{r, echo=TRUE, message=FALSE}
+
+# Translate into ODE model
+Elf_model <- odemodel(reactions, forcings = c("u"), modelname = "Elfmodel")
+
+# Define observations
+observables <- eqnvec(
+  G_obs = "scale*Gifts")
+
+# Generate observation function
+g <- Y(observables, states = c("Gifts"), compile = TRUE, modelname = "obsfn")
+
+
+```
+Here, we define four different forms for $u$. We use data frames with the columns $name$, $time$ and $value$. The forcings method linearly interpolates between the given sampling points.
+```{r, echo=TRUE, message=FALSE}
+
+myforcings1 <- data.frame(name = "u",
+                         time = seq(0,24,len=100),
+                         value = 1+sin(seq(0,24,len=100)*2*3.14/24-3.14/2))
+
+myforcings2 <- data.frame(name = "u",
+                         time = c(seq(0,5,len=10),seq(5,24,len=100)),
+                         value = c(rep(0,10),1+sin((seq(5,24,len=100)-5)*2*3.14/24-3.14/2)))
+
+myforcings3 <- data.frame(name = "u",
+                         time = c(seq(0,10,len=10),seq(10,24,len=100)),
+                         value = c(rep(0,10),1+sin((seq(10,24,len=100)-10)*2*3.14/24-3.14/2)))
+
+set.seed(1)
+myforcings4 <- data.frame(name = "u",
+                         time = c(seq(0,5,len=10),seq(5,24,len=10)),
+                         value = c(rep(1,10),rnorm(10,1,0.2)))
+
+
+mypars <- unique(c(getParameters(g), getParameters(Elf_model)))
+trafo <- define(NULL, "x~y", x = mypars, y = mypars)
+
+```
+In the definition of the prediction function $x$, we hand over the data frames as follows:
+```{r, echo=TRUE, message=FALSE}
+
+# Generate prediction function from ODE model
+x <- Xs(Elf_model, forcings = myforcings1, condition="sin day 0") +
+  Xs(Elf_model, forcings = myforcings2, condition="sin day 5") +
+  Xs(Elf_model, forcings = myforcings3, condition="sin day 10") +
+  Xs(Elf_model, forcings = myforcings4, condition="random")
+
+# Simuate data
+# Define time points for simulation, day in december 
+timesD <- seq(0,24, len=100) 
+
+# Define parameter values for data simulation
+pars <- c(trigger = 2,
+          activateB = 0.1, activateC = 0.1, activateD = 0.1,
+          deactivateB = 0.2, deactivateC = 0.2, deactivateD = 0.2,
+          deactivateBByD = 1,
+          B = 0.9, actB = 0.1, C = 0.8, actC = 0.2, D = 0.8, actD = 0.2,
+          prodGbyB = 1, prodGbyC = 1, prodGbyD = 1, 
+          Gifts = 0, stealGifts = 1,
+          scale = 10)
+
+# Generate a prediction
+# Define time points for simulation, day in december 
+times <- seq(0, 24, .1)
+
+```
+We are ready for plotting now. But we want to use the steady state contraint again.
+```{r, echo=TRUE, message=FALSE}
+
+
+mysteadies <- steadyStates(reactions, forcings = "u")
+trafoSS <- insert(trafo, "x~steadyEqn", x = names(mysteadies), steadyEqn = mysteadies)
+pSS <- P(trafoSS)
+out <- (g*x*pSS)(times, pars)
+plotPrediction(out)
+
+```
