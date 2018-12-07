@@ -35,6 +35,7 @@ list.files(pattern = "\\.(c|o|so)$", recursive = T) %>% unlink
 # ------------------------------------------------------------- #
 system2("git", c("add", "--all"))
 git2r::commit(message = "updated htmls")
+system2("git", "pull")
 system2("git", "push")
 
 # ------------------------------------------------------------- #

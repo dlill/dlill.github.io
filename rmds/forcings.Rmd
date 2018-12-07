@@ -53,7 +53,7 @@ rownames(condition.grid) <- paste0("time",triggertimes)
 
 # deinfe parameter transformation
 mypars <- unique(c(getParameters(g), getParameters(Elf_model)))
-trafo <- define(NULL, "x~y", x = mypars, y = mypars)
+trafo <- setNames(nm = mypars)
 trafo <- branch(trafo, condition.grid)
 trafo <- insert(trafo, "x~y", x = "trigger_end", y = "trigger_begin+1")
 trafo <- insert(trafo, "x~value", x = "trigger_begin", value=time)
@@ -86,6 +86,7 @@ pars <- c(u = 0, trigger = 2,
 times <- seq(0, 24, .1)
 
 mysteadies <- steadyStates(reactions)
+assign("mysteadies", mysteadies, .GlobalEnv) # only necessary to compile the rmarkdown within rmarkdown::render
 trafoSS <- insert(trafo, "x~steadyEqn", x = names(mysteadies), steadyEqn = mysteadies)
 pSS <- P(trafoSS)
 out <- (g*x*pSS)(times, pars)
@@ -151,7 +152,7 @@ myforcings4 <- data.frame(name = "u",
 
 
 mypars <- unique(c(getParameters(g), getParameters(Elf_model)))
-trafo <- define(NULL, "x~y", x = mypars, y = mypars)
+trafo <- setNames(nm = mypars)
 
 ```
 In the definition of the prediction function $x$, we hand over the data frames as follows:
@@ -182,11 +183,12 @@ pars <- c(trigger = 2,
 times <- seq(0, 24, .1)
 
 ```
+
 We are ready for plotting now. But we want to use the steady state contraint again.
 ```{r, echo=TRUE, message=FALSE}
 
-
 mysteadies <- steadyStates(reactions, forcings = "u")
+assign("mysteadies", mysteadies, .GlobalEnv) # only necessary to compile the rmarkdown within rmarkdown::render
 trafoSS <- insert(trafo, "x~steadyEqn", x = names(mysteadies), steadyEqn = mysteadies)
 pSS <- P(trafoSS)
 out <- (g*x*pSS)(times, pars)
