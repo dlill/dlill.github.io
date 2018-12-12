@@ -1,0 +1,65 @@
+---
+title: "msParframe"
+author: "Daniel Lill"
+date: "12 December 2018"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+library(tidyverse)
+
+library(dMod)
+```
+
+# Enhacing reproducibility of mstrust
+
+The multi-start optimization function `mstrust` can handle a `parframe` as input to the `pars`-argument.
+This can be used to enhave the reproducibility of fitting results as will be shown later.
+
+## Objective function
+```{r}
+truth <- c(Santa = 1, Rudolph = 2, Elf_Marcus = 3)
+p <- setNames(nm = names(truth)) %>% 
+  insert("x~exp(x)", x = .currentSymbols) %>% P
+obj <- constraintL2(truth)
+```
+
+# Using mstrust twice - different parinits
+```{r}
+ms1 <- mstrust(obj, truth, fits = 10)
+ms2 <- mstrust(obj, truth, fits = 10)
+ms1 %>% map("parinit") %>% map(t) %>%  reduce(rbind)
+ms2 %>% map("parinit") %>% map(t) %>%  reduce(rbind)
+```
+
+# Using msParframe
+When passing a parframe, the samplefun and fits argument of mstrust are ignored, instead it will be looped over the different parameters right away.
+Passing parframes is also helpful, if one wants to continue previous unconverged fits.
+
+msParframe returns a parframe of sampled parameters, including the sampling center. This is helpful if the problem is difficult to optimize and one already has found a good fit. This way, it is guaranteed that the same optimum is found again.
+Furthermore, it is possible to set a seed-argument to reproduce the results in a different R-session.
+```{r}
+mP <- msParframe(truth, n = 10, seed = 1)
+ms3 <- mstrust(obj, mP, fits = 1000)
+
+ms3 %>% map("parinit") %>% map(t) %>%  reduce(rbind)
+```
+
+# Continuing fits by passing parframes to mstrust
+Let's simulate a difficult optimization problem by limiting the iterations
+```{r}
+mP <- msParframe(truth, n = 10)
+ms3 <- mstrust(obj, mP, fits = 1000, iterlim = 2)
+intermediate_pars <- ms3 %>% as.parframe()
+print(intermediate_pars)
+```
+
+We can continue the optimization without problems
+```{r}
+ms3_continued <- mstrust(obj, intermediate_pars)
+ms3_continued %>% as.parframe()
+```
+
+Happy mstrusting!
+

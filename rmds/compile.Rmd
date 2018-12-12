@@ -1,0 +1,43 @@
+---
+title: "Compiling model functions"
+author: "Daniel Lill"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(dMod)
+```
+
+When calling a function factory in dMod, such as `P`, dMod will basically do two things with it:
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
