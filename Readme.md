@@ -1,5 +1,7 @@
 [bloq.html](html/bloq.html)
 
+[compile.html](html/compile.html)
+
 [concatenation.html](html/concatenation.html)
 
 [defineinsertbranch.html](html/defineinsertbranch.html)
@@ -15,6 +17,8 @@
 [getSymbols.html](html/getSymbols.html)
 
 [lists.html](html/lists.html)
+
+[msParframe.html](html/msParframe.html)
 
 [Optimization_functions_in_dMod.html](html/Optimization_functions_in_dMod.html)
 
