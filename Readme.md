@@ -8,6 +8,8 @@
 
 [event_estimation.html](html/event_estimation.html)
 
+[forcings.html](html/forcings.html)
+
 [getFunctions.html](html/getFunctions.html)
 
 [getSymbols.html](html/getSymbols.html)
@@ -23,6 +25,8 @@
 [profiles.html](html/profiles.html)
 
 [runbg.html](html/runbg.html)
+
+[shinyapp.html](html/shinyapp.html)
 
 [solvers.html](html/solvers.html)
 
