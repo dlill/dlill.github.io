@@ -40,10 +40,13 @@ reactions <- addReaction(reactions, "Gifts", "", rate = "stealGifts*Gifts", desc
 # In order to use u with events, it has to be defined as a state variable
 reactions <- addReaction(reactions, "", "u", rate = "0", description = "")
 
+# Define events
+myevents <- addEvent(NULL, var = "u", time = "trigger_begin", value = "1", method = "replace")
+myevents <- addEvent(myevents, var = "u", time = "trigger_end", value = "0", method = "replace") 
+
 # Translate into ODE model
 Elf_model <- odemodel(reactions, modelname = "Elfmodel",
-                      events = rbind(data.frame(var = "u", time = "trigger_begin", value = "1", method = "replace"),
-                                     data.frame(var = "u", time = "trigger_end", value = "0", method = "replace")))
+                      events = myevents)
 
 # Define observations
 observables <- eqnvec(
